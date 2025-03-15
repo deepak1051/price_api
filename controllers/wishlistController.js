@@ -1,9 +1,6 @@
 import Wishlist from '../models/Wishlist.js';
 import Product from '../models/Product.js';
 
-// @route   GET api/wishlist
-// @desc    Get all wishlists for a user
-// @access  Private
 export const getWishlists = async (req, res) => {
   try {
     const wishlists = await Wishlist.find({ user: req.user.id })
@@ -17,9 +14,6 @@ export const getWishlists = async (req, res) => {
   }
 };
 
-// @route   GET api/wishlist/:month/:year
-// @desc    Get wishlist for a specific month and year
-// @access  Private
 export const getWishlistByMonth = async (req, res) => {
   try {
     const { month, year } = req.params;
@@ -41,9 +35,6 @@ export const getWishlistByMonth = async (req, res) => {
   }
 };
 
-// @route   POST api/wishlist
-// @desc    Create or update wishlist
-// @access  Private
 export const createOrUpdateWishlist = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -53,7 +44,6 @@ export const createOrUpdateWishlist = async (req, res) => {
   try {
     const { month, year } = req.body;
 
-    // Check if wishlist exists
     let wishlist = await Wishlist.findOne({
       user: req.user.id,
       month,
@@ -61,7 +51,6 @@ export const createOrUpdateWishlist = async (req, res) => {
     });
 
     if (!wishlist) {
-      // Create new wishlist
       wishlist = new Wishlist({
         user: req.user.id,
         month,
@@ -79,20 +68,15 @@ export const createOrUpdateWishlist = async (req, res) => {
   }
 };
 
-// @route   POST api/wishlist/item
-// @desc    Add item to wishlist
-// @access  Private
 export const addItemToWishlist = async (req, res) => {
   try {
     const { productId, store, price, month, year } = req.body;
 
-    // Validate product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    // Find or create wishlist
     let wishlist = await Wishlist.findOne({
       user: req.user.id,
       month,
@@ -108,7 +92,6 @@ export const addItemToWishlist = async (req, res) => {
       });
     }
 
-    // Check if item already exists
     const itemExists = wishlist.items.find(
       (item) => item.product.toString() === productId && item.store === store
     );
@@ -119,7 +102,6 @@ export const addItemToWishlist = async (req, res) => {
         .json({ message: 'Item already exists in wishlist' });
     }
 
-    // Add item to wishlist
     wishlist.items.push({
       product: productId,
       store,
@@ -129,11 +111,6 @@ export const addItemToWishlist = async (req, res) => {
 
     await wishlist.save();
 
-    // Populate product details for the response
-    // await wishlist
-    //   .populate('items.product', ['name', 'description', 'image'])
-    //   .execPopulate() ;
-
     res.json(wishlist);
   } catch (err) {
     console.error(err);
@@ -141,18 +118,13 @@ export const addItemToWishlist = async (req, res) => {
   }
 };
 
-// @route   PUT api/wishlist/item/:itemId
-// @desc    Update item in wishlist
-// @access  Private
 export const updateWishlistItem = async (req, res) => {
   try {
     const { purchased } = req.body;
     const { itemId } = req.params;
 
-    // Find all user wishlists
     const wishlists = await Wishlist.find({ user: req.user.id });
 
-    // Find wishlist containing the item
     let targetWishlist = null;
     let itemIndex = -1;
 
@@ -172,7 +144,6 @@ export const updateWishlistItem = async (req, res) => {
         .json({ message: 'Item not found in any wishlist' });
     }
 
-    // Update item
     targetWishlist.items[itemIndex].purchased = purchased;
 
     if (purchased) {
@@ -183,11 +154,6 @@ export const updateWishlistItem = async (req, res) => {
 
     await targetWishlist.save();
 
-    // Populate product details for the response
-    // await targetWishlist
-    //   .populate('items.product', ['name', 'description', 'image'])
-    //   .execPopulate();
-
     res.json(targetWishlist);
   } catch (err) {
     console.error(err.message);
@@ -195,17 +161,12 @@ export const updateWishlistItem = async (req, res) => {
   }
 };
 
-// @route   DELETE api/wishlist/item/:itemId
-// @desc    Remove item from wishlist
-// @access  Private
 export const removeWishlistItem = async (req, res) => {
   try {
     const { itemId } = req.params;
 
-    // Find all user wishlists
     const wishlists = await Wishlist.find({ user: req.user.id });
 
-    // Find wishlist containing the item
     let targetWishlist = null;
     let itemIndex = -1;
 
@@ -225,7 +186,6 @@ export const removeWishlistItem = async (req, res) => {
         .json({ message: 'Item not found in any wishlist' });
     }
 
-    // Remove item
     targetWishlist.items.splice(itemIndex, 1);
 
     await targetWishlist.save();
